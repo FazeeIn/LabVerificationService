@@ -20,6 +20,10 @@ Service for checking laboratory work of students in programming subjects at the 
 Сервис получает запрос в виде решения и тестов к лабораторной работе.
 Возвращает отчет по проведенному тестированию.
 
+/check - POST отправить на проверку
+
+/check/:userID - GET получить отчет
+
 ### Сервис - личный кабинет пользователя
 
 0. Личный кабинет
