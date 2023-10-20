@@ -6,8 +6,8 @@ type Test struct {
 }
 
 type TestRequest struct {
-	Code  string `json:"code"`
-	Tests []Test `json:"tests"`
+	Code  []byte `json:"code"`
+	Tests []byte `json:"tests"`
 }
 
 type TestResult struct {
