@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"archive/tar"
 	"bytes"
 	"context"
 	"fmt"
@@ -14,19 +13,17 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func NewContainer(testRequest model.TestRequest) ([]byte, error) {
-	// Создание временного Python-файла
-	bufCode, err := newFile("code/__init__.py", testRequest.Code)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test file: %s", err)
-	}
+type Lang interface {
+	GetFiles(testRequest model.TestRequest) ([]bytes.Buffer, error)
+}
 
-	// Создание временного файла с тестами
-	bufTests, err := newFile("tests.py", testRequest.Tests)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create test file: %s", err)
-	}
+func NewContainer(testRequest model.TestRequest, lang Lang) ([]byte, error) {
 
+	// Создание необходимого набора файлов (код, тесты, ...)
+	files, err := lang.GetFiles(testRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create files: %s", err)
+	}
 	// Создание и запуск контейнера
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -43,14 +40,11 @@ func NewContainer(testRequest model.TestRequest) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create container: %s", err)
 	}
 
-	err = cli.CopyToContainer(context.Background(), resp.ID, "/", &bufCode, types.CopyToContainerOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy Python file to container: %s", err)
-	}
-
-	err = cli.CopyToContainer(context.Background(), resp.ID, "/", &bufTests, types.CopyToContainerOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy test file to container: %s", err)
+	for _, v := range files {
+		err = cli.CopyToContainer(context.Background(), resp.ID, "/", &v, types.CopyToContainerOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to copy Python files to container: %s", err)
+		}
 	}
 
 	err = cli.ContainerStart(context.Background(), resp.ID, types.ContainerStartOptions{})
@@ -75,21 +69,4 @@ func NewContainer(testRequest model.TestRequest) ([]byte, error) {
 	}
 
 	return resultData, nil
-}
-
-func newFile(name string, data []byte) (bytes.Buffer, error) {
-	var buf bytes.Buffer
-	tw := tar.NewWriter(&buf)
-
-	err := tw.WriteHeader(&tar.Header{
-		Name: name,             // filename
-		Mode: 0644,             // permissions
-		Size: int64(len(data)), // filesize
-	})
-	if err != nil {
-		return buf, err
-	}
-	tw.Write(data)
-	tw.Close()
-	return buf, nil
 }

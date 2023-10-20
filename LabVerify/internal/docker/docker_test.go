@@ -27,7 +27,7 @@ func TestNewContainer(t *testing.T) {
 	}
 
 	for _, testRequest := range testRequests {
-		_, err := docker.NewContainer(testRequest.test)
+		_, err := docker.NewContainer(testRequest.test, model.Python{})
 
 		if err != nil {
 			t.Errorf("NewContainer(%s) = %s; want nil", testRequest.name, err)

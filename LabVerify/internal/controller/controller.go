@@ -20,7 +20,7 @@ func (a app) RunCheck(c *gin.Context) {
 		return
 	}
 
-	report, err := docker.NewContainer(testRequest)
+	report, err := docker.NewContainer(testRequest, model.Python{})
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
