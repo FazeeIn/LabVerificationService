@@ -9,11 +9,9 @@ type Python struct {
 }
 
 func (Python) GetFiles(testRequest TestRequest) ([]bytes.Buffer, error) {
-	var (
-		files []bytes.Buffer
-		err   error
-	)
-	files = make([]bytes.Buffer, 2)
+	files := make([]bytes.Buffer, 2)
+	var err error
+
 	// Создание временного Python-файла
 	files[0], err = newFile("code/__init__.py", testRequest.Code)
 	if err != nil {
